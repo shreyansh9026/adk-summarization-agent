@@ -489,7 +489,47 @@ DASHBOARD_HTML = """
             updateHistoryDisplay();
             loadCategories();
             checkApiStatus();
+            registerButtonHandlers();
         });
+
+        function registerButtonHandlers() {
+            console.log('Registering button handlers...');
+            const clsBtn = document.getElementById('classifyBtn');
+            const clearBtn = document.querySelector('.btn-secondary[onclick="clearDemo()"]');
+            const batchBtn = document.getElementById('batchBtn');
+            const clearBatchBtn = document.querySelector('.btn-secondary[onclick="clearBatch()"]');
+
+            if (clsBtn) {
+                clsBtn.addEventListener('click', () => {
+                    console.log('classifyBtn clicked');
+                    classifyText();
+                });
+            }
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    console.log('clear demo clicked');
+                    clearDemo();
+                });
+            }
+            if (batchBtn) {
+                batchBtn.addEventListener('click', () => {
+                    console.log('batchBtn clicked');
+                    classifyBatch();
+                });
+            }
+            if (clearBatchBtn) {
+                clearBatchBtn.addEventListener('click', () => {
+                    console.log('clear batch clicked');
+                    clearBatch();
+                });
+            }
+        }
+
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('Global JS error:', message, 'at', source, lineno + ':' + colno);
+            showResponse(`<p class="error">❌ JavaScript error: ${message} at ${source}:${lineno}</p>`);
+            return false;
+        };
 
         async function checkApiStatus() {
             const statusEl = document.getElementById('apiStatus');
