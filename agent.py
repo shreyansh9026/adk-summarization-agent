@@ -26,7 +26,7 @@ class TextClassificationAgent:
             raise ValueError("GOOGLE_API_KEY environment variable not set")
         
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
+        self.model = genai.GenerativeModel("gemini-1.5-pro")
         self.categories = [
             "NEWS",
             "OPINION",
