@@ -7,6 +7,12 @@ A Google AI agent built with ADK and Gemini that classifies input text into pred
 This project demonstrates a complete AI agent implementation using:
 - **Google ADK (Agent Development Kit)** - For agent structure and capabilities
 - **Gemini Pro Model** - For inference and text understanding
+
+> NOTE: Repository structure was recently improved for maintainability:
+> - `docs/` : documentation and guides
+> - `scripts/` : deployment scripts and Dockerfile
+> - `tests/` : test script(s)
+> - `archive/` : submission artifacts
 - **Flask** - For HTTP server and endpoint exposure
 - **Google Cloud Run** - For serverless deployment
 - **Docker** - For containerization
