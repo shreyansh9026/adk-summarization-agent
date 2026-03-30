@@ -360,6 +360,7 @@ DASHBOARD_HTML = """
         </div>
         <div class="status-bar">
             <div class="status-item"><div class="status-label">Status</div><div class="status-value"><span class="status-badge">✓ Healthy</span></div></div>
+            <div class="status-item"><div class="status-label">API Status</div><div class="status-value" id="apiStatus"><span class="status-badge" style="background:#f39c12">Checking...</span></div></div>
             <div class="status-item"><div class="status-label">Version</div><div class="status-value">1.0.0</div></div>
             <div class="status-item"><div class="status-label">Model</div><div class="status-value">Gemini</div></div>
             <div class="status-item"><div class="status-label">Categories</div><div class="status-value">5</div></div>
@@ -487,7 +488,24 @@ DASHBOARD_HTML = """
         window.addEventListener('load', () => {
             updateHistoryDisplay();
             loadCategories();
+            checkApiStatus();
         });
+
+        async function checkApiStatus() {
+            const statusEl = document.getElementById('apiStatus');
+            try {
+                const response = await fetch('/agent/info');
+                if (response.ok) {
+                    statusEl.innerHTML = '<span class="status-badge">✓ Online</span>';
+                } else {
+                    statusEl.innerHTML = '<span class="status-badge" style="background:#f44336">✗ Unavailable</span>';
+                    showResponse(`<p class="error">❌ API check failed: ${response.status} ${response.statusText}</p>`);
+                }
+            } catch (error) {
+                statusEl.innerHTML = '<span class="status-badge" style="background:#f44336">✗ Offline</span>';
+                showResponse(`<p class="error">❌ Could not reach API: ${error.message}</p>`);
+            }
+        }
 
         function loadExample(text) {
             document.getElementById('textInput').value = text;
