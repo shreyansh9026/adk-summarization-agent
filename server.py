@@ -19,7 +19,7 @@ except Exception as e:
     app.agent = None
 
 
-# HTML Dashboard
+# HTML Dashboard - Enhanced with better UX
 DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html lang="en">
@@ -29,63 +29,334 @@ DASHBOARD_HTML = """
     <title>ADK Text Classification Agent</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }
-        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
-        .header p { font-size: 1.1em; opacity: 0.9; }
-        .status-bar { display: flex; justify-content: space-around; background: #f5f5f5; padding: 20px; border-bottom: 1px solid #ddd; }
-        .status-item { text-align: center; }
-        .status-label { font-size: 0.9em; color: #666; margin-bottom: 5px; }
-        .status-value { font-size: 1.3em; font-weight: bold; color: #667eea; }
-        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.85em; font-weight: bold; background: #4caf50; color: white; }
-        .content { padding: 40px; }
-        .section { margin-bottom: 40px; }
-        .section h2 { color: #667eea; margin-bottom: 20px; font-size: 1.5em; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .info-card { background: #f9f9f9; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea; }
-        .info-card h3 { color: #333; margin-bottom: 10px; font-size: 1.1em; }
-        .info-card p { color: #666; font-size: 0.95em; line-height: 1.6; }
-        .demo-section { background: #f0f4ff; padding: 30px; border-radius: 10px; border: 2px solid #667eea; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
-        .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-family: 'Segoe UI', sans-serif; font-size: 1em; min-height: 100px; }
-        .form-group textarea:focus { outline: none; border-color: #667eea; box-shadow: 0 0 5px rgba(102, 126, 234, 0.3); }
-        .button-group { display: flex; gap: 10px; }
-        .btn { padding: 12px 30px; border: none; border-radius: 5px; font-size: 1em; font-weight: bold; cursor: pointer; transition: all 0.3s ease; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3); }
-        .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
-        .btn-secondary:hover { background: #eeeeee; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 30px 80px rgba(0,0,0,0.3); overflow: hidden; }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="white" opacity="0.1"/><circle cx="80" cy="80" r="3" fill="white" opacity="0.1"/></svg>');
+            opacity: 0.5;
+        }
+        .header-content { position: relative; z-index: 1; }
+        .header h1 { font-size: 3em; margin-bottom: 10px; animation: slideDown 0.6s ease; }
+        .header p { font-size: 1.2em; opacity: 0.95; animation: slideUp 0.6s ease 0.2s both; }
+        @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0;
+            background: linear-gradient(90deg, #f5f5f5 0%, #ffffff 100%);
+            padding: 0;
+        }
+        .status-item {
+            text-align: center;
+            padding: 25px 20px;
+            border-right: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+        .status-item:last-child { border-right: none; }
+        .status-item:hover { background: #f9f9f9; }
+        .status-label { font-size: 0.85em; color: #999; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .status-value { font-size: 1.4em; font-weight: bold; color: #667eea; }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 25px;
+            font-size: 0.8em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        .content { padding: 50px 40px; }
+        .section { margin-bottom: 50px; }
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .info-card {
+            background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.2);
+        }
+        .info-card h3 { color: #333; margin-bottom: 12px; font-size: 1.2em; }
+        .info-card p { color: #666; font-size: 0.95em; line-height: 1.7; }
+        .demo-section {
+            background: linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 100%);
+            padding: 35px;
+            border-radius: 15px;
+            border: 2px solid #667eea;
+        }
+        .form-group { margin-bottom: 25px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+        }
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 1em;
+            min-height: 120px;
+            transition: all 0.3s ease;
+            resize: vertical;
+        }
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .examples { margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.8); border-radius: 8px; }
+        .examples strong { display: block; margin-bottom: 12px; color: #333; }
+        .button-group { display: flex; gap: 12px; flex-wrap: wrap; }
+        .btn {
+            padding: 13px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        .btn-secondary:hover {
+            background: #f0f4ff;
+        }
         .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .response-box { background: white; border: 1px solid #ddd; border-radius: 5px; padding: 20px; margin-top: 20px; display: none; }
+        .response-box {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 25px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
         .response-box.show { display: block; }
-        .response-box pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 0.9em; max-height: 400px; }
-        .result-item { margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; }
-        .result-label { font-weight: bold; color: #667eea; }
-        .result-value { color: #333; margin-left: 5px; }
-        .error { color: #f44336; font-weight: bold; }
-        .success { color: #4caf50; font-weight: bold; }
-        .example-btn { display: inline-block; padding: 8px 15px; margin: 5px; background: #e3f2fd; border: 1px solid #667eea; border-radius: 20px; cursor: pointer; font-size: 0.9em; transition: all 0.3s ease; }
-        .example-btn:hover { background: #667eea; color: white; }
-        .endpoints { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
-        .endpoint-card { background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px; transition: all 0.3s ease; }
-        .endpoint-card:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.1); transform: translateY(-5px); }
-        .endpoint-method { display: inline-block; padding: 5px 10px; border-radius: 5px; font-weight: bold; font-size: 0.85em; margin-bottom: 10px; color: white; }
-        .method-get { background: #4caf50; }
-        .method-post { background: #2196f3; }
-        .endpoint-path { font-family: 'Courier New', monospace; font-size: 0.95em; word-break: break-all; margin: 10px 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .response-box h3 { color: #667eea; margin-bottom: 15px; font-size: 1.3em; }
+        .response-box pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85em;
+            max-height: 400px;
+            border-left: 4px solid #667eea;
+        }
+        .result-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .confidence-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #45a049);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+        .result-label { font-weight: 600; color: #667eea; }
+        .result-value { color: #333; margin-left: 8px; }
+        .error { color: #f44336; font-weight: 600; }
+        .success { color: #4caf50; font-weight: 600; }
+        .category-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 1.1em;
+        }
+        .example-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 5px 5px 5px 0;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #667eea;
+            transition: all 0.3s ease;
+        }
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .endpoints {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .endpoint-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 22px;
+            transition: all 0.3s ease;
+        }
+        .endpoint-card:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+            border-color: #667eea;
+        }
+        .endpoint-method {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.75em;
+            margin-bottom: 12px;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .method-get { background: linear-gradient(135deg, #4caf50, #45a049); }
+        .method-post { background: linear-gradient(135deg, #2196f3, #1976d2); }
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            word-break: break-all;
+            margin: 12px 0;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
         .endpoint-desc { color: #666; font-size: 0.95em; line-height: 1.6; }
-        .footer { background: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 0.9em; border-top: 1px solid #ddd; }
-        .github-link { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #333; color: white; text-decoration: none; border-radius: 5px; transition: all 0.3s ease; }
-        .github-link:hover { background: #555; }
+        .footer {
+            background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            border-top: 1px solid #e0e0e0;
+        }
+        .link-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .github-link, .docs-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        .github-link {
+            background: #333;
+            color: white;
+        }
+        .github-link:hover {
+            background: #555;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .docs-link {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .docs-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .copy-btn {
+            padding: 4px 8px;
+            margin-left: 8px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.2s ease;
+        }
+        .copy-btn:hover { background: #668eea; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🤖 ADK Text Classification Agent</h1>
-            <p>Powered by Google Gemini | Deployed on Cloud Run</p>
+            <div class="header-content">
+                <h1>🤖 ADK Text Classification Agent</h1>
+                <p>Powered by Google Gemini | Deployed on Google Cloud Run</p>
+            </div>
         </div>
         <div class="status-bar">
             <div class="status-item"><div class="status-label">Status</div><div class="status-value"><span class="status-badge">✓ Healthy</span></div></div>
@@ -95,74 +366,338 @@ DASHBOARD_HTML = """
         </div>
         <div class="content">
             <div class="section">
-                <h2>📋 Overview</h2>
+                <h2>📋 What is This?</h2>
                 <div class="info-grid">
-                    <div class="info-card"><h3>What is This?</h3><p>An AI agent that classifies text into 5 categories using Google's Gemini model, deployed on Cloud Run.</p></div>
-                    <div class="info-card"><h3>Categories</h3><p>NEWS • OPINION • TECHNICAL • MARKETING • EDUCATIONAL</p></div>
-                    <div class="info-card"><h3>Technology</h3><p>Python • Flask • Google ADK • Gemini API • Cloud Run</p></div>
+                    <div class="info-card">
+                        <h3>🎯 Purpose</h3>
+                        <p>An AI-powered text classification agent that automatically analyzes and categorizes text into 5 distinct categories using advanced machine learning.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>📂 Categories</h3>
+                        <p><strong>NEWS</strong> • <strong>OPINION</strong> • <strong>TECHNICAL</strong> • <strong>MARKETING</strong> • <strong>EDUCATIONAL</strong></p>
+                    </div>
+                    <div class="info-card">
+                        <h3>⚙️ Technology</h3>
+                        <p>Python • Flask • Google ADK • Gemini AI • Cloud Run • RESTful API</p>
+                    </div>
                 </div>
             </div>
+
             <div class="section">
                 <h2>🔌 API Endpoints</h2>
                 <div class="endpoints">
-                    <div class="endpoint-card"><span class="endpoint-method method-get">GET</span><div class="endpoint-path">/</div><div class="endpoint-desc">Interactive dashboard (this page)</div></div>
-                    <div class="endpoint-card"><span class="endpoint-method method-get">GET</span><div class="endpoint-path">/agent/info</div><div class="endpoint-desc">Get agent info, categories, endpoints</div></div>
-                    <div class="endpoint-card"><span class="endpoint-method method-post">POST</span><div class="endpoint-path">/classify</div><div class="endpoint-desc">Classify text into categories</div></div>
+                    <div class="endpoint-card">
+                        <span class="endpoint-method method-get">GET</span>
+                        <div class="endpoint-path">/</div>
+                        <div class="endpoint-desc">📍 Interactive Dashboard - Try the agent with a web interface (this page)</div>
+                    </div>
+                    <div class="endpoint-card">
+                        <span class="endpoint-method method-get">GET</span>
+                        <div class="endpoint-path">/agent/info</div>
+                        <div class="endpoint-desc">📊 Agent Metadata - Get categories, models, and available endpoints</div>
+                    </div>
+                    <div class="endpoint-card">
+                        <span class="endpoint-method method-post">POST</span>
+                        <div class="endpoint-path">/classify</div>
+                        <div class="endpoint-desc">⭐ Classification - Send text to classify {"text": "your text here"}</div>
+                    </div>
                 </div>
             </div>
+
             <div class="section">
                 <h2>🎯 Try It Now</h2>
                 <div class="demo-section">
                     <div class="form-group">
-                        <label for="textInput">Enter text to classify:</label>
-                        <textarea id="textInput" placeholder="Example: Breaking news about a new discovery..."></textarea>
+                        <label for="textInput">✍️ Enter text to classify:</label>
+                        <textarea id="textInput" placeholder="Example: Breaking news about a scientific discovery..."></textarea>
                     </div>
                     <div class="examples">
-                        <strong>Quick Examples:</strong><br>
-                        <span class="example-btn" onclick="loadExample('Breaking news: Scientists discover new renewable energy source')">📰 News</span>
-                        <span class="example-btn" onclick="loadExample('In my opinion, this policy is misguided')">💬 Opinion</span>
-                        <span class="example-btn" onclick="loadExample('The API uses HTTP POST with JSON payload and Bearer authentication')">⚙️ Technical</span>
-                        <span class="example-btn" onclick="loadExample('Buy this product today! Limited 50% discount')">📢 Marketing</span>
-                        <span class="example-btn" onclick="loadExample('Machine learning is a subset of artificial intelligence that learns from data')">📚 Educational</span>
+                        <strong>⚡ Quick Examples:</strong><br>
+                        <span class="example-btn" onclick="loadExample('Breaking news: Scientists discover new renewable energy source cheaper than fossil fuels')">📰 News</span>
+                        <span class="example-btn" onclick="loadExample('In my strong opinion, this policy is misguided and needs immediate reform from the government')">💬 Opinion</span>
+                        <span class="example-btn" onclick="loadExample('REST APIs use HTTP POST with JSON payloads and Bearer token authentication headers')">⚙️ Technical</span>
+                        <span class="example-btn" onclick="loadExample('Buy this amazing product today! Get 50% discount. Limited time offer ends soon!')">📢 Marketing</span>
+                        <span class="example-btn" onclick="loadExample('Machine learning is a subset of artificial intelligence that learns patterns from data')">📚 Educational</span>
                     </div>
-                    <div class="button-group" style="margin-top: 20px;">
-                        <button class="btn btn-primary" onclick="classifyText()" id="classifyBtn">Classify Text</button>
-                        <button class="btn btn-secondary" onclick="clearDemo()">Clear</button>
+                    <div class="button-group" style="margin-top: 25px;">
+                        <button class="btn btn-primary" onclick="classifyText()" id="classifyBtn">🚀 Classify Text</button>
+                        <button class="btn btn-secondary" onclick="clearDemo()">🗑️ Clear</button>
                     </div>
-                    <div class="response-box" id="responseBox"><h3>Results:</h3><div id="responseContent"></div></div>
+                    <div class="response-box" id="responseBox">
+                        <h3>📊 Classification Results:</h3>
+                        <div id="responseContent"></div>
+                    </div>
                 </div>
             </div>
+
+            <div class="section">
+                <h2>📦 Batch Classification</h2>
+                <div class="demo-section">
+                    <div class="form-group">
+                        <label for="batchInput">✍️ Enter texts (one per line):</label>
+                        <textarea id="batchInput" placeholder="Line 1: First text&#10;Line 2: Second text&#10;Line 3: Third text"></textarea>
+                    </div>
+                    <div class="button-group" style="margin-top: 25px;">
+                        <button class="btn btn-primary" onclick="classifyBatch()" id="batchBtn">🚀 Classify All</button>
+                        <button class="btn btn-secondary" onclick="clearBatch()">🗑️ Clear</button>
+                    </div>
+                    <div class="response-box" id="batchResponseBox">
+                        <h3>📊 Batch Results:</h3>
+                        <div id="batchResponseContent"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📚 Categories Guide</h2>
+                <div id="categoriesContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;"></div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="loadCategories()">📖 Load Category Info</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📋 Classification History</h2>
+                <div class="demo-section">
+                    <p style="margin-bottom: 15px; color: #666;">Last 5 classifications (stored locally)</p>
+                    <div id="historyContainer" style="max-height: 400px; overflow-y: auto;"></div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <button class="btn btn-secondary" onclick="clearHistory()">🗑️ Clear History</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="section" style="text-align: center;">
-                <a href="https://github.com/shreyansh9026/adk-summarization-agent" class="github-link" target="_blank">🔗 View on GitHub</a>
+                <div class="link-group">
+                    <a href="https://github.com/shreyansh9026/adk-summarization-agent" class="github-link" target="_blank">🔗 View on GitHub</a>
+                    <a href="https://cloud.google.com/run" class="docs-link" target="_blank">📖 Cloud Run Docs</a>
+                </div>
             </div>
         </div>
         <div class="footer">
-            <p>ADK Text Classification Agent v1.0.0 | Powered by Google Gemini | Google Cloud Run</p>
+            <p>✨ ADK Text Classification Agent v1.0.0 | Powered by Google Gemini | Google Cloud Run</p>
+            <p style="margin-top: 10px; font-size: 0.85em;">Developer: Shreyansh Tripathi | Framework: Google Agent Development Kit</p>
         </div>
     </div>
+
     <script>
-        function loadExample(text) { document.getElementById('textInput').value = text; }
-        function clearDemo() { document.getElementById('textInput').value = ''; document.getElementById('responseBox').classList.remove('show'); }
+        const HISTORY_KEY = 'adk_classification_history';
+
+        // Initialize history on page load
+        window.addEventListener('load', () => {
+            updateHistoryDisplay();
+            loadCategories();
+        });
+
+        function loadExample(text) {
+            document.getElementById('textInput').value = text;
+            document.getElementById('textInput').focus();
+        }
+
+        function clearDemo() {
+            document.getElementById('textInput').value = '';
+            document.getElementById('responseBox').classList.remove('show');
+        }
+
+        function saveToHistory(text, result) {
+            let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            history.unshift({
+                timestamp: new Date().toLocaleString(),
+                text: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+                category: result.classification?.category,
+                confidence: result.classification?.confidence
+            });
+            // Keep only last 5
+            history = history.slice(0, 5);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            const container = document.getElementById('historyContainer');
+
+            if (history.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No classifications yet</p>';
+                return;
+            }
+
+            container.innerHTML = history.map(item => `
+                <div class="result-item">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div>
+                            <div class="result-label">${item.category}</div>
+                            <div style="font-size: 0.85em; color: #999;">${item.text}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: #667eea; font-weight: 600;">${(item.confidence * 100).toFixed(0)}%</div>
+                            <div style="font-size: 0.8em; color: #999;">${item.timestamp}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            if (confirm('Clear all history?')) {
+                localStorage.removeItem(HISTORY_KEY);
+                updateHistoryDisplay();
+            }
+        }
+
         async function classifyText() {
             const text = document.getElementById('textInput').value.trim();
-            if (!text) { showResponse('<p class="error">❌ Please enter text</p>'); return; }
+            if (!text) {
+                showResponse('<p class="error">❌ Please enter text to classify</p>');
+                return;
+            }
             const btn = document.getElementById('classifyBtn');
-            btn.disabled = true; btn.innerHTML = '⏳ Processing...';
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Processing...';
             try {
-                const response = await fetch('/classify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text }) });
+                const response = await fetch('/classify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
                 const data = await response.json();
                 if (data.success) {
                     const result = data.classification;
-                    let html = `<div class="result-item"><div class="result-label">✓ Category:</div><div class="result-value"><strong>${result.category}</strong></div></div>
-                        <div class="result-item"><div class="result-label">Confidence:</div><div class="result-value">${(result.confidence * 100).toFixed(1)}%</div></div>
-                        <div class="result-item"><div class="result-label">Reasoning:</div><div class="result-value">${result.reasoning}</div></div>
-                        <div class="result-item" style="margin-top: 15px;"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+                    const percentage = (result.confidence * 100).toFixed(1);
+                    saveToHistory(text, data);
+                    let html = `
+                        <div class="result-item">
+                            <div class="result-label">✓ Category:</div>
+                            <div class="result-value"><span class="category-badge">${result.category}</span></div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">📊 Confidence: ${percentage}%</div>
+                            <div class="confidence-bar"><div class="confidence-fill" style="width: ${percentage}%"></div></div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">💬 Reasoning:</div>
+                            <div class="result-value">${result.reasoning}</div>
+                        </div>
+                        <div class="result-item" style="margin-top: 20px;">
+                            <div class="result-label">📋 Full Response:</div>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
                     showResponse(html);
-                } else { showResponse(`<p class="error">❌ Error: ${data.error}</p>`); }
-            } catch (error) { showResponse(`<p class="error">❌ Error: ${error.message}</p>`); }
-            finally { btn.disabled = false; btn.innerHTML = 'Classify Text'; }
+                } else {
+                    showResponse(`<p class="error">❌ Error: ${data.error}</p>`);
+                }
+            } catch (error) {
+                showResponse(`<p class="error">❌ Error: ${error.message}</p>`);
+            }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = '🚀 Classify Text';
+            }
         }
-        function showResponse(html) { document.getElementById('responseContent').innerHTML = html; document.getElementById('responseBox').classList.add('show'); }
+
+        async function classifyBatch() {
+            const input = document.getElementById('batchInput').value.trim();
+            if (!input) {
+                showBatchResponse('<p class="error">❌ Please enter texts to classify</p>');
+                return;
+            }
+
+            const texts = input.split('\n').filter(t => t.trim()).map(t => t.trim());
+            if (texts.length === 0) {
+                showBatchResponse('<p class="error">❌ No valid texts found</p>');
+                return;
+            }
+
+            const btn = document.getElementById('batchBtn');
+            btn.disabled = true;
+            btn.innerHTML = `⏳ Processing ${texts.length} texts...`;
+
+            try {
+                const response = await fetch('/batch/classify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ texts: texts })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const stats = data.statistics;
+                    const categoryBars = Object.entries(stats.categories)
+                        .map(([cat, count]) => `<div class="result-item"><strong>${cat}:</strong> ${count}</div>`)
+                        .join('');
+
+                    let html = `
+                        <div class="result-item">
+                            <div class="result-label">📊 Statistics:</div>
+                            <div style="margin-top: 10px;">
+                                <div>✓ Total: ${stats.total}</div>
+                                <div>✓ Successful: ${stats.successful}</div>
+                                <div>✗ Failed: ${stats.failed}</div>
+                            </div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">📈 Category Distribution:</div>
+                            <div style="margin-top: 10px;">${categoryBars}</div>
+                        </div>
+                        <div class="result-item" style="margin-top: 20px;">
+                            <div class="result-label">📋 Full Response:</div>
+                            <pre style="max-height: 300px;">${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                    showBatchResponse(html);
+
+                    // Save batch results to history
+                    data.results.forEach(r => {
+                        if (r.success) saveToHistory(r.text, r);
+                    });
+                } else {
+                    showBatchResponse(`<p class="error">❌ Error: ${data.error}</p>`);
+                }
+            } catch (error) {
+                showBatchResponse(`<p class="error">❌ Error: ${error.message}</p>`);
+            }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = '🚀 Classify All';
+            }
+        }
+
+        function clearBatch() {
+            document.getElementById('batchInput').value = '';
+            document.getElementById('batchResponseBox').classList.remove('show');
+        }
+
+        async function loadCategories() {
+            try {
+                const response = await fetch('/categories');
+                const data = await response.json();
+
+                if (data.success) {
+                    const container = document.getElementById('categoriesContainer');
+                    container.innerHTML = data.categories.map(cat => `
+                        <div class="info-card">
+                            <h3>${cat}</h3>
+                            <p>${data.descriptions[cat] || 'Category information'}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        }
+
+        function showResponse(html) {
+            document.getElementById('responseContent').innerHTML = html;
+            document.getElementById('responseBox').classList.add('show');
+            document.getElementById('responseBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function showBatchResponse(html) {
+            document.getElementById('batchResponseContent').innerHTML = html;
+            document.getElementById('batchResponseBox').classList.add('show');
+            document.getElementById('batchResponseBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
     </script>
 </body>
 </html>
@@ -222,6 +757,64 @@ def classify():
     return jsonify(result), status_code
 
 
+@app.route("/batch/classify", methods=["POST"])
+def batch_classify():
+    """
+    Batch classify multiple texts
+
+    Expected request body:
+    {
+        "texts": ["text1", "text2", "text3"]
+    }
+    """
+    if not app.agent:
+        return jsonify({
+            "success": False,
+            "error": "Agent not initialized"
+        }), 503
+
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "Request body must be valid JSON"
+            }), 400
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Invalid JSON: {str(e)}"
+        }), 400
+
+    texts = data.get("texts", [])
+    if not texts or not isinstance(texts, list):
+        return jsonify({
+            "success": False,
+            "error": "Missing or invalid 'texts' field. Expected list of strings."
+        }), 400
+
+    result = app.agent.batch_classify(texts)
+    status_code = 200 if result.get("success") else 400
+    return jsonify(result), status_code
+
+
+@app.route("/categories", methods=["GET"])
+def get_categories():
+    """Get all available categories with descriptions"""
+    if not app.agent:
+        return jsonify({
+            "success": False,
+            "error": "Agent not initialized"
+        }), 503
+
+    descriptions = app.agent.get_category_descriptions()
+    return jsonify({
+        "success": True,
+        "categories": app.agent.categories,
+        "descriptions": descriptions
+    }), 200
+
+
 @app.route("/agent/info", methods=["GET"])
 def agent_info():
     """Get information about the agent"""
@@ -229,7 +822,7 @@ def agent_info():
         categories = []
     else:
         categories = app.agent.categories
-    
+
     return jsonify({
         "agent_type": "TextClassificationAgent",
         "capability": "Classify text into predefined categories",
@@ -244,7 +837,17 @@ def agent_info():
             {
                 "path": "/classify",
                 "method": "POST",
-                "description": "Classify text"
+                "description": "Classify single text"
+            },
+            {
+                "path": "/batch/classify",
+                "method": "POST",
+                "description": "Classify multiple texts in batch"
+            },
+            {
+                "path": "/categories",
+                "method": "GET",
+                "description": "Get category information"
             },
             {
                 "path": "/agent/info",

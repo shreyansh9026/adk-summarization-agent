@@ -120,24 +120,77 @@ Only return valid JSON, no additional text."""
                 "text": text
             }
     
+    def batch_classify(self, texts: list[str]) -> dict[str, Any]:
+        """
+        Classify multiple texts in batch
+
+        Args:
+            texts: List of texts to classify
+
+        Returns:
+            Dictionary with batch classification results
+        """
+        if not texts:
+            return {
+                "success": False,
+                "error": "No texts provided for batch classification"
+            }
+
+        if not isinstance(texts, list):
+            return {
+                "success": False,
+                "error": "Texts must be a list"
+            }
+
+        results = []
+        stats = {"total": len(texts), "successful": 0, "failed": 0, "categories": {}}
+
+        for text in texts:
+            result = self.classify(text)
+            results.append(result)
+
+            if result.get("success"):
+                stats["successful"] += 1
+                category = result.get("classification", {}).get("category")
+                if category:
+                    stats["categories"][category] = stats["categories"].get(category, 0) + 1
+            else:
+                stats["failed"] += 1
+
+        return {
+            "success": True,
+            "results": results,
+            "statistics": stats
+        }
+
+    def get_category_descriptions(self) -> dict[str, str]:
+        """Get descriptions for each category"""
+        return {
+            "NEWS": "Current events, news articles, press releases",
+            "OPINION": "Opinion pieces, editorials, personal views",
+            "TECHNICAL": "Technical documentation, code, specifications",
+            "MARKETING": "Marketing content, advertisements, promotions",
+            "EDUCATIONAL": "Educational materials, tutorials, learning content"
+        }
+
     def process_request(self, request_data: dict[str, Any]) -> dict[str, Any]:
         """
         Process incoming request and return classification
-        
+
         Args:
-            request_data: Request containing 'text' field
-            
+            request_data: Request containing 'text' field or 'texts' for batch
+
         Returns:
             Classification result
         """
         text = request_data.get("text", "").strip()
-        
+
         if not text:
             return {
                 "success": False,
                 "error": "Missing or empty 'text' field in request"
             }
-        
+
         return self.classify(text)
 
 
