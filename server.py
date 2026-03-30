@@ -421,8 +421,8 @@ DASHBOARD_HTML = """
                         <span class="example-btn" onclick="loadExample('Machine learning is a subset of artificial intelligence that learns patterns from data')">📚 Educational</span>
                     </div>
                     <div class="button-group" style="margin-top: 25px;">
-                        <button class="btn btn-primary" onclick="classifyText()" id="classifyBtn">🚀 Classify Text</button>
-                        <button class="btn btn-secondary" onclick="clearDemo()">🗑️ Clear</button>
+                        <button class="btn btn-primary" id="classifyBtn">🚀 Classify Text</button>
+                        <button class="btn btn-secondary" id="clearDemoBtn">🗑️ Clear</button>
                     </div>
                     <div class="response-box" id="responseBox">
                         <h3>📊 Classification Results:</h3>
@@ -439,8 +439,8 @@ DASHBOARD_HTML = """
                         <textarea id="batchInput" placeholder="Line 1: First text&#10;Line 2: Second text&#10;Line 3: Third text"></textarea>
                     </div>
                     <div class="button-group" style="margin-top: 25px;">
-                        <button class="btn btn-primary" onclick="classifyBatch()" id="batchBtn">🚀 Classify All</button>
-                        <button class="btn btn-secondary" onclick="clearBatch()">🗑️ Clear</button>
+                        <button class="btn btn-primary" id="batchBtn">🚀 Classify All</button>
+                        <button class="btn btn-secondary" id="clearBatchBtn">🗑️ Clear</button>
                     </div>
                     <div class="response-box" id="batchResponseBox">
                         <h3>📊 Batch Results:</h3>
@@ -495,9 +495,9 @@ DASHBOARD_HTML = """
         function registerButtonHandlers() {
             console.log('Registering button handlers...');
             const clsBtn = document.getElementById('classifyBtn');
-            const clearBtn = document.querySelector('.btn-secondary[onclick="clearDemo()"]');
+            const clearBtn = document.getElementById('clearDemoBtn');
             const batchBtn = document.getElementById('batchBtn');
-            const clearBatchBtn = document.querySelector('.btn-secondary[onclick="clearBatch()"]');
+            const clearBatchBtn = document.getElementById('clearBatchBtn');
 
             if (clsBtn) {
                 clsBtn.addEventListener('click', () => {
@@ -523,6 +523,16 @@ DASHBOARD_HTML = """
                     clearBatch();
                 });
             }
+        }
+
+        function clearDemo() {
+            document.getElementById('textInput').value = '';
+            document.getElementById('responseBox').classList.remove('show');
+        }
+
+        function clearBatch() {
+            document.getElementById('batchInput').value = '';
+            document.getElementById('batchResponseBox').classList.remove('show');
         }
 
         window.onerror = function(message, source, lineno, colno, error) {
