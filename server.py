@@ -484,83 +484,333 @@ DASHBOARD_HTML = """
     <script>
         const HISTORY_KEY = 'adk_classification_history';
 
+        // Immediate diagnostic log
+        console.log('=== ADK Dashboard Loading ===');
+        console.log('Page URL:', window.location.href);
+        console.log('Timestamp:', new Date().toISOString());
+
         // Initialize history on page load
         window.addEventListener('load', () => {
+            console.log('=== Page Load Event Fired ===');
             updateHistoryDisplay();
             loadCategories();
             checkApiStatus();
             registerButtonHandlers();
+            console.log('=== Initialization Complete ===');
         });
 
         function registerButtonHandlers() {
-            console.log('Registering button handlers...');
+            console.log('=== Registering button handlers ===');
             const clsBtn = document.getElementById('classifyBtn');
             const clearBtn = document.getElementById('clearDemoBtn');
             const batchBtn = document.getElementById('batchBtn');
             const clearBatchBtn = document.getElementById('clearBatchBtn');
 
+            console.log('classifyBtn found:', !!clsBtn);
+            console.log('clearDemoBtn found:', !!clearBtn);
+            console.log('batchBtn found:', !!batchBtn);
+            console.log('clearBatchBtn found:', !!clearBatchBtn);
+
             if (clsBtn) {
-                clsBtn.addEventListener('click', () => {
-                    console.log('classifyBtn clicked');
+                clsBtn.addEventListener('click', (e) => {
+                    console.log('=== CLICKED: classifyBtn ===', e);
                     classifyText();
                 });
+            } else {
+                console.error('ERROR: classifyBtn not found in DOM!');
             }
             if (clearBtn) {
-                clearBtn.addEventListener('click', () => {
-                    console.log('clear demo clicked');
+                clearBtn.addEventListener('click', (e) => {
+                    console.log('=== CLICKED: clearDemoBtn ===', e);
                     clearDemo();
                 });
+            } else {
+                console.error('ERROR: clearDemoBtn not found in DOM!');
             }
             if (batchBtn) {
-                batchBtn.addEventListener('click', () => {
-                    console.log('batchBtn clicked');
+                batchBtn.addEventListener('click', (e) => {
+                    console.log('=== CLICKED: batchBtn ===', e);
                     classifyBatch();
                 });
+            } else {
+                console.error('ERROR: batchBtn not found in DOM!');
             }
             if (clearBatchBtn) {
-                clearBatchBtn.addEventListener('click', () => {
-                    console.log('clear batch clicked');
+                clearBatchBtn.addEventListener('click', (e) => {
+                    console.log('=== CLICKED: clearBatchBtn ===', e);
                     clearBatch();
                 });
+            } else {
+                console.error('ERROR: clearBatchBtn not found in DOM!');
             }
         }
 
         function clearDemo() {
+            console.log('clearDemo called');
             document.getElementById('textInput').value = '';
             document.getElementById('responseBox').classList.remove('show');
         }
 
         function clearBatch() {
+            console.log('clearBatch called');
             document.getElementById('batchInput').value = '';
             document.getElementById('batchResponseBox').classList.remove('show');
         }
 
         window.onerror = function(message, source, lineno, colno, error) {
-            console.error('Global JS error:', message, 'at', source, lineno + ':' + colno);
+            console.error('=== GLOBAL JS ERROR ===', {message, source, lineno, colno, error});
             showResponse(`<p class="error">❌ JavaScript error: ${message} at ${source}:${lineno}</p>`);
             return false;
         };
 
         async function checkApiStatus() {
+            console.log('=== Checking API Status ===');
             const statusEl = document.getElementById('apiStatus');
             try {
                 const response = await fetch('/agent/info');
+                console.log('API /agent/info response:', response.status, response.statusText);
                 if (response.ok) {
                     statusEl.innerHTML = '<span class="status-badge">✓ Online</span>';
+                    console.log('✓ API is Online');
                 } else {
                     statusEl.innerHTML = '<span class="status-badge" style="background:#f44336">✗ Unavailable</span>';
-                    showResponse(`<p class="error">❌ API check failed: ${response.status} ${response.statusText}</p>`);
+                    const errorText = await response.text();
+                    console.error('✗ API returned error:', response.status, errorText);
+                    showResponse(`<p class="error">❌ API check failed: ${response.status} ${response.statusText}<br>Response: ${errorText}</p>`);
                 }
             } catch (error) {
+                console.error('✗ API Connection Error:', error);
                 statusEl.innerHTML = '<span class="status-badge" style="background:#f44336">✗ Offline</span>';
                 showResponse(`<p class="error">❌ Could not reach API: ${error.message}</p>`);
             }
         }
 
         function loadExample(text) {
+            console.log('loadExample called with:', text.substring(0, 50));
             document.getElementById('textInput').value = text;
             document.getElementById('textInput').focus();
         }
+
+        function saveToHistory(text, result) {
+            let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            history.unshift({
+                timestamp: new Date().toLocaleString(),
+                text: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+                category: result.classification?.category,
+                confidence: result.classification?.confidence
+            });
+            // Keep only last 5
+            history = history.slice(0, 5);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+            const container = document.getElementById('historyContainer');
+
+            if (history.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">No classifications yet</p>';
+                return;
+            }
+
+            container.innerHTML = history.map(item => `
+                <div class="result-item">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div>
+                            <div class="result-label">${item.category}</div>
+                            <div style="font-size: 0.85em; color: #999;">${item.text}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: #667eea; font-weight: 600;">${(item.confidence * 100).toFixed(0)}%</div>
+                            <div style="font-size: 0.8em; color: #999;">${item.timestamp}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function clearHistory() {
+            if (confirm('Clear all history?')) {
+                localStorage.removeItem(HISTORY_KEY);
+                updateHistoryDisplay();
+            }
+        }
+
+        async function classifyText() {
+            console.log('=== classifyText() CALLED ===');
+            const text = document.getElementById('textInput').value.trim();
+            console.log('Input text:', text.substring(0, 50));
+            if (!text) {
+                console.warn('Input text is empty');
+                showResponse('<p class="error">❌ Please enter text to classify</p>');
+                return;
+            }
+            const btn = document.getElementById('classifyBtn');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Processing...';
+            try {
+                console.log('Sending POST to /classify with text:', text.substring(0, 50));
+                const response = await fetch('/classify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+                console.log('Response status:', response.status, response.statusText);
+                const data = await response.json();
+                console.log('Response data:', data);
+                if (data.success) {
+                    const result = data.classification;
+                    const percentage = (result.confidence * 100).toFixed(1);
+                    saveToHistory(text, data);
+                    let html = `
+                        <div class="result-item">
+                            <div class="result-label">✓ Category:</div>
+                            <div class="result-value"><span class="category-badge">${result.category}</span></div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">📊 Confidence: ${percentage}%</div>
+                            <div class="confidence-bar"><div class="confidence-fill" style="width: ${percentage}%"></div></div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">💬 Reasoning:</div>
+                            <div class="result-value">${result.reasoning}</div>
+                        </div>
+                        <div class="result-item" style="margin-top: 20px;">
+                            <div class="result-label">📋 Full Response:</div>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                    showResponse(html);
+                    console.log('✓ Classification successful');
+                } else {
+                    console.error('API returned error:', data.error);
+                    showResponse(`<p class="error">❌ Error: ${data.error}</p>`);
+                }
+            } catch (error) {
+                console.error('❌ Exception in classifyText:', error);
+                showResponse(`<p class="error">❌ Error: ${error.message}</p>`);
+            }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = '🚀 Classify Text';
+            }
+        }
+
+        async function classifyBatch() {
+            console.log('=== classifyBatch() CALLED ===');
+            const input = document.getElementById('batchInput').value.trim();
+            if (!input) {
+                console.warn('Batch input is empty');
+                showBatchResponse('<p class="error">❌ Please enter texts to classify</p>');
+                return;
+            }
+
+            const texts = input.split('\n').filter(t => t.trim()).map(t => t.trim());
+            if (texts.length === 0) {
+                console.warn('No valid texts found after splitting');
+                showBatchResponse('<p class="error">❌ No valid texts found</p>');
+                return;
+            }
+
+            console.log('Batch texts to classify:', texts.length);
+            const btn = document.getElementById('batchBtn');
+            btn.disabled = true;
+            btn.innerHTML = `⏳ Processing ${texts.length} texts...`;
+
+            try {
+                console.log('Sending POST to /batch/classify with', texts.length, 'texts');
+                const response = await fetch('/batch/classify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ texts: texts })
+                });
+                console.log('Batch response status:', response.status);
+                const data = await response.json();
+                console.log('Batch response data:', data);
+
+                if (data.success) {
+                    const stats = data.statistics;
+                    const categoryBars = Object.entries(stats.categories)
+                        .map(([cat, count]) => `<div class="result-item"><strong>${cat}:</strong> ${count}</div>`)
+                        .join('');
+
+                    let html = `
+                        <div class="result-item">
+                            <div class="result-label">📊 Statistics:</div>
+                            <div style="margin-top: 10px;">
+                                <div>✓ Total: ${stats.total}</div>
+                                <div>✓ Successful: ${stats.successful}</div>
+                                <div>✗ Failed: ${stats.failed}</div>
+                            </div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">📈 Category Distribution:</div>
+                            <div style="margin-top: 10px;">${categoryBars}</div>
+                        </div>
+                        <div class="result-item" style="margin-top: 20px;">
+                            <div class="result-label">📋 Full Response:</div>
+                            <pre style="max-height: 300px;">${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                    showBatchResponse(html);
+
+                    // Save batch results to history
+                    data.results.forEach(r => {
+                        if (r.success) saveToHistory(r.text, r);
+                    });
+                    console.log('✓ Batch classification successful');
+                } else {
+                    console.error('API batch error:', data.error);
+                    showBatchResponse(`<p class="error">❌ Error: ${data.error}</p>`);
+                }
+            } catch (error) {
+                console.error('❌ Exception in classifyBatch:', error);
+                showBatchResponse(`<p class="error">❌ Error: ${error.message}</p>`);
+            }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = '🚀 Classify All';
+            }
+        }
+
+        async function loadCategories() {
+            console.log('=== loadCategories() CALLED ===');
+            try {
+                const response = await fetch('/categories');
+                const data = await response.json();
+
+                if (data.success) {
+                    const container = document.getElementById('categoriesContainer');
+                    container.innerHTML = data.categories.map(cat => `
+                        <div class="info-card">
+                            <h3>${cat}</h3>
+                            <p>${data.descriptions[cat] || 'Category information'}</p>
+                        </div>
+                    `).join('');
+                    console.log('✓ Categories loaded');
+                } else {
+                    console.error('Categories load failed:', data.error);
+                }
+            } catch (error) {
+                console.error('❌ Failed to load categories:', error);
+            }
+        }
+
+        function showResponse(html) {
+            console.log('showResponse called');
+            document.getElementById('responseContent').innerHTML = html;
+            document.getElementById('responseBox').classList.add('show');
+            document.getElementById('responseBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function showBatchResponse(html) {
+            console.log('showBatchResponse called');
+            document.getElementById('batchResponseContent').innerHTML = html;
+            document.getElementById('batchResponseBox').classList.add('show');
+            document.getElementById('batchResponseBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
 
         function clearDemo() {
             document.getElementById('textInput').value = '';
