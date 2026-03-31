@@ -7,7 +7,7 @@ import google.generativeai as genai
 from typing import Any
 import json
 import os
-
+import time
 
 class TextClassificationAgent:
     """AI Agent for classifying text into categories using Gemini"""
@@ -156,6 +156,9 @@ Only return valid JSON, no additional text."""
                     stats["categories"][category] = stats["categories"].get(category, 0) + 1
             else:
                 stats["failed"] += 1
+                
+            # Add a delay between API calls to prevent Gemini Rate Limits (429 errors)
+            time.sleep(4)
 
         return {
             "success": True,
